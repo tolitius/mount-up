@@ -40,8 +40,8 @@ Whenever any state / component is
 
 where:
 
-`k`: key / name of the listner
-`f`: function / listener
+`k`: key / name of the listner<br/>
+`f`: function / listener<br/>
 `when`: when to apply `f`. possible values `:before` or `:after`
 
 ## Listener
@@ -50,7 +50,7 @@ As anything good in Clojure, listener is just a function.
 
 This function will be passed a map with `:name` and `:action` keys.
 
-`:name` will have a component's name
+`:name` will have a component's name<br/>
 `:action` will have an action taked: i.e. `:up` or `:down`
 
 ### Logging
@@ -133,4 +133,4 @@ INFO  mount-up.core - << stopping.. #'boot.user/server
 {:stopped ["#'boot.user/server"]}
 ```
 
-`mu/log` function is just an example of course: any function can be used as a listener.
+`mu/log` function is just an example of course: any function(s) can be used as a listener.
