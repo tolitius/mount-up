@@ -1,4 +1,4 @@
-#mount up
+# mount up
 
 [mount](https://github.com/tolitius/mount) manages stateful components.
 
