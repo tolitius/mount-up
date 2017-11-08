@@ -13,6 +13,9 @@ mount-up let's you know whenever any of these components are "managed".
   - [On up](#on-up)
   - [Removing all the listeners](#removing-all-the-listeners)
   - [On up and down](#on-up-and-down)
+- [Wrapping](#wrapping)
+  - [Exception Handling](#exception-handling)
+- [License](#license)
 
 ## Ups and Downs
 
@@ -42,7 +45,7 @@ where:
 
 `k`: key / name of the listner<br/>
 `f`: function / listener<br/>
-`when`: when to apply `f`. possible values `:before` or `:after`
+`when`: when to apply `f`. possible values `:before`, `:after` or `:wrap-in`
 
 ## Listener
 
@@ -134,3 +137,108 @@ INFO  mount-up.core - << stopping.. #'boot.user/server
 ```
 
 `mu/log` function is just an example of course: any function(s) can be used as a listener.
+
+## Wrapping
+
+Besides `:before` and `:after`, mount-up also knows how to _wrap_ ups and downs with a custom function via `:wrap-in`.
+
+This is really useful in case you need to be in charge of calling start or stop for each individual state.
+For example to guard ups and downs of each state with a `try/catch`.
+
+A "wrapper" function takes two arguments:
+
+`f`: a function that is going to bring state up or down<br/>
+`state-name`: a name of the state (i.e. "#'app/db")<br/>
+
+Function `f` will be provided by mount and will just need to be invoked as `(f)` to start/stop the state. The rest is up to you.
+
+### Exception Handling
+
+It is a lot simpler to demo than to explain.
+
+mount-up comes with a generic `try-catch` function:
+
+```clojure
+(defn try-catch [on-error]
+  (fn [f state]
+    (try (f)
+         (catch Throwable t
+           (on-error t state)))))
+```
+
+which returns a function that takes `f` and `state` (name) and wraps calling `(f)` in a `try/catch`. It takes an `on-error` function
+that will decide what will happen if starting or stopping state results in a `Throwable`.
+
+Let's define a sample `on-error` function that will eat (ouch!) the exception and just log what happened:
+
+```clojure
+(defn log-exception [ex _]
+  (let [root (.getMessage (.getCause ex))]
+    (log/error (str (.getMessage ex) " \"" root \"))))
+```
+
+Let's define three states, one of which throws an exception:
+
+```clojure
+boot.user=> (defstate server :start 42 :stop -42)
+#'boot.user/server
+boot.user=> (defstate db :start (/ 1 0) :stop -42)
+#'boot.user/db
+boot.user=> (defstate pi :start 3.14 :stop 14.3)
+#'boot.user/pi
+```
+
+Let's start these without wrapping anything:
+
+```clojure
+boot.user=> (mount/start)
+INFO  mount-up.core - >> starting.. #'boot.user/server
+INFO  mount-up.core - >> starting.. #'boot.user/db
+
+java.lang.ArithmeticException: Divide by zero
+   java.lang.RuntimeException: could not start [#'boot.user/db] due to
+```
+
+As expected `#'boot.user/db` throws an exception and we have no control over it. Also notice that system failed
+(which in most cases is the right behavior), so `#'boot.user/pi` was not even attempted to start.
+
+Let's plug a sample `try-catcher` and see what it does:
+
+```clojure
+boot.user=> (mu/on-up :guard (mu/try-catch log-exception) :wrap-in)
+{:guard
+ #object[clojure.core$partial$fn__4761 0x7fbb46f2 "clojure.core$partial$fn__4761@7fbb46f2"],
+ :info
+ #object[clojure.core$partial$fn__4761 0x656ab49 "clojure.core$partial$fn__4761@656ab49"]}
+```
+
+(we still have the `:info` logger from the above section to help with a visual)
+
+Notice the `:wrap-in` instead of `:after` or `:before`.
+
+Let's stop and start it again:
+
+```clojure
+boot.user=> (mount/stop)
+{:stopped ["#'boot.user/server"]}
+```
+
+```clojure
+boot.user=> (mount/start)
+INFO  mount-up.core - >> starting.. #'boot.user/server
+INFO  mount-up.core - >> starting.. #'boot.user/db
+ERROR boot.user - could not start [#'boot.user/db] due to "Divide by zero"
+INFO  mount-up.core - >> starting.. #'boot.user/pi
+{:started ["#'boot.user/server" "#'boot.user/pi"]}
+```
+
+this time we "controlled" the exception, reported the problem and _decided_ the system may start without a database.
+
+again, a built in `try-catch` is just an example of a custom wrapper function.
+
+## License
+
+Copyright © 2016 tolitius
+
+Distributed under the Eclipse Public License either version 1.0 or (at
+your option) any later version.

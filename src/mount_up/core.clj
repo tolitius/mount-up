@@ -21,13 +21,24 @@
   (apply f args)
   (invoke notify action args))
 
+(defn- wrap-in [_ wrapper f & args]
+  (wrapper #(apply f args)
+           (first args)))
+
+(defn- route [where]
+  (case where
+    :after after
+    :before before
+    :wrap-in wrap-in
+    (throw (RuntimeException. (str "\"where\" clause should be one of these #{:after :before :wrap-in}. got \"" where "\" instead")))))
+
 (defn on-up [k f where]
-  (let [wrap (if (= where :after) after before)
+  (let [wrap (route where)
         listner (partial wrap :up f)]
     (hooke/add-hook #'mount.core/up k listner)))
 
 (defn on-down [k f where]
-  (let [wrap (if (= where :after) after before)
+  (let [wrap (route where)
         listner (partial wrap :down f)]
     (hooke/add-hook #'mount.core/down k listner)))
 
@@ -39,6 +50,14 @@
   (doseq [f [#'mount.core/up
              #'mount.core/down]]
     (hooke/clear-hooks f)))
+
+;; wrappers
+
+(defn try-catch [on-error]
+  (fn [f state]
+    (try (f)
+         (catch Throwable t
+           (on-error t state)))))
 
 ;; notifiers
 (defn log [{:keys [name action]}]
