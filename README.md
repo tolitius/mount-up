@@ -140,7 +140,7 @@ INFO  mount-up.core - << stopping.. #'boot.user/server
 
 ## Wrapping
 
-Besides `:before` and `:after`, mount-up also knows how to _wrap_ ups and downs with a custom function via `:wrap-in`.
+Besides `:before` and `:after`, mount-up knows how to _wrap_ ups and downs with a custom function via `:wrap-in`.
 
 This is really useful in case you need to be in charge of calling start or stop for each individual state.
 For example to guard ups and downs of each state with a `try/catch`.
@@ -148,7 +148,7 @@ For example to guard ups and downs of each state with a `try/catch`.
 A "wrapper" function takes two arguments:
 
 `f`: a function that is going to bring state up or down<br/>
-`state-name`: a name of the state (i.e. "#'app/db")<br/>
+`state-name`: a name of the state (i.e. `"#'app/db"`)<br/>
 
 Function `f` will be provided by mount and will just need to be invoked as `(f)` to start/stop the state. The rest is up to you.
 
@@ -169,12 +169,13 @@ mount-up comes with a generic `try-catch` function:
 which returns a function that takes `f` and `state` (name) and wraps calling `(f)` in a `try/catch`. It takes an `on-error` function
 that will decide what will happen if starting or stopping state results in a `Throwable`.
 
-Let's define a sample `on-error` function that will eat (ouch!) the exception and just log what happened:
+Let's define a sample `on-error` function that will eat (ouch!) the exception and will log what happened:
 
 ```clojure
-(defn log-exception [ex _]
-  (let [root (.getMessage (.getCause ex))]
-    (log/error (str (.getMessage ex) " \"" root \"))))
+boot.user=> (defn log-exception [ex _]
+              (let [root (.getMessage (.getCause ex))]
+                (log/error (str (.getMessage ex) " \"" root \"))))
+#'boot.user/log-exception
 ```
 
 Let's define three states, one of which throws an exception:
@@ -202,7 +203,7 @@ java.lang.ArithmeticException: Divide by zero
 As expected `#'boot.user/db` throws an exception and we have no control over it. Also notice that system failed
 (which in most cases is the right behavior), so `#'boot.user/pi` was not even attempted to start.
 
-Let's plug a sample `try-catcher` and see what it does:
+Let's plug in a sample `try-catcher` "on-up" and see what it does:
 
 ```clojure
 boot.user=> (mu/on-up :guard (mu/try-catch log-exception) :wrap-in)
@@ -234,11 +235,23 @@ INFO  mount-up.core - >> starting.. #'boot.user/pi
 
 this time we "controlled" the exception, reported the problem and _decided_ the system may start without a database.
 
+Let's check what all these state look like:
+
+```clojure
+boot.user=> (require '[mount.tools.graph :as graph])
+```
+```clojure
+boot.user=> (graph/states-with-deps)
+({:name "#'boot.user/server", :order 1, :status #{:started}, :deps #{}}
+ {:name "#'boot.user/db", :order 2, :status #{:stopped}, :deps #{}}
+ {:name "#'boot.user/pi", :order 3, :status #{:started}, :deps #{}})
+```
+
 again, a built in `try-catch` is just an example of a custom wrapper function.
 
 ## License
 
-Copyright © 2016 tolitius
+Copyright © 2017 tolitius
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
