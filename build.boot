@@ -1,21 +1,20 @@
-(def +version+ "0.1.1")
+(def +version+ "0.1.2")
 
 (set-env!
   :source-paths #{"src"}
   :dependencies '[[org.clojure/clojure             "1.8.0"]
-                  [ch.qos.logback/logback-classic  "1.1.3"]
-                  [org.clojure/tools.logging       "0.3.1"]
+                  [org.clojure/tools.logging       "0.4.1"]
                   [robert/hooke                    "1.3.0"]
 
                   ;; "mount up" when needed would be used with mount
-                  [mount                           "0.1.11"  :scope "provided"]
+                  [mount                           "0.1.13"  :scope "provided"]
 
                   ;; boot clj
-                  [boot/core                       "2.7.1"   :scope "provided"]
+                  [boot/core                       "2.8.2"   :scope "provided"]
                   [adzerk/bootlaces                "0.1.13"  :scope "test"]
                   [adzerk/boot-logservice          "1.2.0"   :scope "test"]
-                  [adzerk/boot-test                "1.1.1"   :scope "test"]
-                  [tolitius/boot-check             "0.1.4"   :scope "test"]])
+                  [adzerk/boot-test                "1.2.0"   :scope "test"]
+                  [tolitius/boot-check             "0.1.11"  :scope "test"]])
 
 (require '[adzerk.bootlaces :refer :all]
          '[adzerk.boot-test :as bt]

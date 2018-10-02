@@ -63,8 +63,8 @@ mount-up comes with one such listener that logs whenever any of the states / com
 ```clojure
 (defn log [{:keys [name action]}]
   (case action
-    :up (info ">> starting.." name)
-    :down (info "<< stopping.." name)))
+    :up (log/info ">> starting.." name)
+    :down (log/info "<< stopping.." name)))
 ```
 
 ## Listening to Ups and Downs
@@ -251,7 +251,7 @@ again, a built in `try-catch` is just an example of a custom wrapper function.
 
 ## License
 
-Copyright © 2017 tolitius
+Copyright © 2018 tolitius
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
