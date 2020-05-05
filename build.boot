@@ -1,12 +1,12 @@
-(def +version+ "0.1.2")
+(def +version+ "0.1.3")
 
 (set-env!
   :source-paths #{"src"}
-  :dependencies '[[org.clojure/clojure             "1.8.0"]
-                  [org.clojure/tools.logging       "0.4.1"]
+  :dependencies '[[org.clojure/tools.logging       "1.0.0"]
                   [robert/hooke                    "1.3.0"]
 
                   ;; "mount up" when needed would be used with mount
+                  [org.clojure/clojure             "1.10.1"  :scope "provided"]
                   [mount                           "0.1.13"  :scope "provided"]
 
                   ;; boot clj
